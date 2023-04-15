@@ -89,7 +89,7 @@ def init_sidebar():
 
     st.session_state["params"]["prompt"] = chat_config_expander.text_area(
         "Prompts",
-        "You are a helpful assistant that answer questions as possible as you can.",
+        "You are a critical friend that helps someone understand their own arguments.",
         help="The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.",
     )
     chat_config_expander.caption('Looking for help at https://platform.openai.com/docs/api-reference/chat')
