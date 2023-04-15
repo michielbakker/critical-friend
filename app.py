@@ -6,12 +6,12 @@ import streamlit as st
 
 # from fpdf import FPDF
 
-st.set_page_config(page_title="ChatGPT", page_icon="🌐")
+st.set_page_config(page_title="Critical Friend", page_icon="🌐")
 
 MAIN = st.empty()
 
 
-PROMT = """
+PROMPT = """
 I want you to constructively critique the arguments I'm about to put forward. Play the role of a "critical friend" having a discussion with me. Give responses in a way that would open up rather than close down the debate. Please limit your responses to 1-2 sentences.
 """.strip()
 
@@ -93,7 +93,7 @@ def init_sidebar():
 
     st.session_state["params"]["prompt"] = chat_config_expander.text_area(
         "Prompts",
-        "You are a critical friend that helps someone understand their own arguments.",
+        PROMPT,
         help="The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.",
     )
     chat_config_expander.caption('Looking for help at https://platform.openai.com/docs/api-reference/chat')
@@ -165,7 +165,7 @@ def init_chat(chat_name):
         for i in range(len(chat["question"])):
             answer_zoom.markdown(f"""😃 **YOU:** {chat["question"][i]}""")
             if i < len(chat["answer"]):
-                answer_zoom.markdown(f"""🤖 **AI:** {chat["answer"][i]}""")
+                answer_zoom.markdown(f"""🤖 **FRIEND:** {chat["answer"][i]}""")
 
     with ask_form.form(chat_name):
         col1, col2 = st.columns([10, 1])
@@ -180,7 +180,7 @@ def init_chat(chat_name):
 
             with st.spinner("Wait for responding..."):
                 answer = ask(chat["messages"])
-                answer_zoom.markdown(f"""🤖 **AI:** {answer}""")
+                answer_zoom.markdown(f"""🤖 **FRIEND:** {answer}""")
             chat["messages"].append({"role": "assistant", "content": answer})
             if answer:
                 chat["question"].append(input_text)
