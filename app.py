@@ -1,153 +1,232 @@
-import streamlit as st
+import base64
+import os
+
 import openai
-from datetime import datetime
-from streamlit.components.v1 import html
-import pandas as pd
-import csv
-st.set_page_config(page_title="Critical Friend")
+import streamlit as st
+
+# from fpdf import FPDF
+
+st.set_page_config(page_title="ChatGPT", page_icon="🌐")
+
+MAIN = st.empty()
 
 
-html_temp = """
-                <div style="background-color:{};padding:1px">
-                
-                </div>
-                """
-
-button = """
-<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="nainiayoub" data-color="#FFDD00" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
-"""
+def create_download_link(val, filename):
+    b64 = base64.b64encode(val)  # val looks like b'...'
+    return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download="{filename}.pdf">Download file</a>'
 
 
-with st.sidebar:
-    st.markdown("""
-    # About 
-    Critical friend is a helper tool built on GPT-3 to critique a statement.
-    """)
-    st.markdown(html_temp.format("rgba(55, 53, 47, 0.16)"),unsafe_allow_html=True)
-    st.markdown("""
-    # How does it work
-    Simply enter your viewpoint and a critique of your viewpoint will be generated.
-    You can also download the output as txt.
-    """)
-    st.markdown(html_temp.format("rgba(55, 53, 47, 0.16)"),unsafe_allow_html=True)
-    st.markdown("""
-    Made in the Music Room.
-    """,
-    unsafe_allow_html=True,
-    )
+@st.cache
+def init_openai_settings():
+    openai.api_key = st.secrets["openaiKey"]
 
 
-input_text = None
-if 'output' not in st.session_state:
-    st.session_state['output'] = 0
+def init_session():
+    if not st.session_state.get("params"):
+        st.session_state["params"] = dict()
+    if not st.session_state.get("chats"):
+        st.session_state["chats"] = {}
 
-if st.session_state['output'] <=2:
-    st.markdown("""
-    # Critical Friend
-    """)
-    input_text = st.text_input("Generate a critique in response to", disabled=False, placeholder="What's on your mind?")
-    st.session_state['output'] = st.session_state['output'] + 1
-else:
-    # input_text = st.text_input("Brainstorm ideas for", disabled=True)
-    st.info("Thank you! Refresh for more critiques💡")
-    st.markdown('''
-    <a target="_blank" style="color: black" href="https://twitter.com/intent/tweet?text=I%20just%20used%20the%20Critical%20Friend%20app!%0A%0Ahttps://michielbakker-critical-friend-app-lvizi2.streamlit.app/">
-        <button class="btn">
-            Tweet about this!
-        </button>
-    </a>
-    <style>
-    .btn{
-        display: inline-flex;
-        -moz-box-align: center;
-        align-items: center;
-        -moz-box-pack: center;
-        justify-content: center;
-        font-weight: 400;
-        padding: 0.25rem 0.75rem;
-        border-radius: 0.25rem;
-        margin: 0px;
-        line-height: 1.6;
-        color: #fff;
-        background-color: #00acee;
-        width: auto;
-        user-select: none;
-        border: 1px solid #00acee;
-        }
-    .btn:hover{
-        color: #00acee;
-        background-color: #fff;
-    }
-    </style>
-    ''',
-    unsafe_allow_html=True
-    )
 
-hide="""
-<style>
-footer{
-	visibility: hidden;
-    position: relative;
-}
-.viewerBadge_container__1QSob{
-    visibility: hidden;
-}
-#MainMenu{
-	visibility: hidden;
-}
-<style>
-"""
-st.markdown(hide, unsafe_allow_html=True)
-
-# html(button, height=70, width=220)
-# st.markdown(
-#     """
-#     <style>
-#         iframe[width="220"] {
-#             position: fixed;
-#             bottom: 60px;
-#             right: 40px;
-#         }
-#     </style>
-#     """,
-#     unsafe_allow_html=True,
-# )
-if input_text:
-    if True:
-        openai.api_key = st.secrets["openaiKey"]
-        MODEL = "gpt-3.5-turbo"
-        response = openai.ChatCompletion.create(
-            model=MODEL,
-            messages=[
-                {"role": "system", "content": "You are an assistant that helps people clarify their arguments. A user puts in a statement and you answer with a critique."},
-                {"role": "user", "content": input_text},
-                # {"role": "assistant", "content": "O hark! The hue of yonder fruit, it be the shade of an orange!"},
-                # {"role": "user", "content": ""}
+def new_chat(chat_name):
+    if not st.session_state["chats"].get(chat_name):
+        st.session_state["chats"][chat_name] = {
+            "answer": [],
+            "question": [],
+            "messages": [
+                {"role": "system", "content": st.session_state["params"]["prompt"]}
             ],
-            temperature=0.8,
-        )
-        # response = openai.Completion.create(engine="text-davinci-002", prompt=prompt, max_tokens=150)
-        critique_output = response.choices[0].message.content
-        today = datetime.today().strftime('%Y-%m-%d')
-        topic = "Critique for: "+input_text+"\n@Date: "+str(today)+"\n"+critique_output
-        
-        st.info(critique_output)
-        filename = "critical_friend_"+str(today)+".txt"
-        btn = st.download_button(
-            label="Download txt",
-            data=topic,
-            file_name=filename
-        )
-        fields = [input_text, critique_output, str(today)]
-        # read local csv file
-        r = pd.read_csv('./data/prompts.csv')
-        if len(fields)!=0:
-            with open('./data/prompts.csv', 'a', encoding='utf-8', newline='') as f:
-                # write to csv file (append mode)
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerow(fields)
+        }
+    return chat_name
 
-        
-        
 
-        
+def switch_chat(chat_name):
+    if st.session_state.get("current_chat") != chat_name:
+        st.session_state["current_chat"] = chat_name
+        init_chat(chat_name)
+        st.stop()
+
+
+def switch_chat2(chat_name):
+    if st.session_state.get("current_chat") != chat_name:
+        st.session_state["current_chat"] = chat_name
+        init_sidebar()
+        init_chat(chat_name)
+        st.stop()
+
+
+def init_sidebar():
+    st.sidebar.title("ChatGPT")
+    chat_name_container = st.sidebar.container()
+    chat_config_expander = st.sidebar.expander('Chat configuration')
+    # export_pdf = st.sidebar.empty()
+
+    # chat config
+    st.session_state["params"] = dict()
+    # st.session_state['params']["api_key"] = chat_config_expander.text_input("API_KEY", placeholder="Please input openai key")
+    st.session_state["params"]["model"] = chat_config_expander.selectbox(
+        "Please select a model",
+        ["gpt-3.5-turbo"],  # , "text-davinci-003"
+        help="ID of the model to use",
+    )
+    st.session_state["params"]["temperature"] = chat_config_expander.slider(
+        "Temperature",
+        min_value=0.0,
+        max_value=2.0,
+        value=1.2,
+        step=0.1,
+        format="%0.2f",
+        help="""What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.""",
+    )
+    st.session_state["params"]["max_tokens"] = chat_config_expander.slider(
+        "MAX_TOKENS",
+        value=2000,
+        step=1,
+        min_value=100,
+        max_value=4000,
+        help="The maximum number of tokens to generate in the completion",
+    )
+
+    st.session_state["params"]["prompt"] = chat_config_expander.text_area(
+        "Prompts",
+        "You are a helpful assistant that answer questions as possible as you can.",
+        help="The prompt(s) to generate completions for, encoded as a string, array of strings, array of tokens, or array of token arrays.",
+    )
+    chat_config_expander.caption('Looking for help at https://platform.openai.com/docs/api-reference/chat')
+
+    new_chat_button = chat_name_container.button(
+        label="➕ New Chat"
+    )  # , use_container_width=True
+    if new_chat_button:
+        new_chat_name = f"Chat{len(st.session_state['chats'])}"
+        st.session_state["current_chat"] = new_chat_name
+        new_chat(new_chat_name)
+
+    with st.sidebar.container():
+        for chat_name in st.session_state.get("chats", {}).keys():
+            if chat_name == st.session_state.get('current_chat'):
+                chat_name_container.button(
+                    label='💬 ' + chat_name,
+                    on_click=switch_chat2,
+                    key=chat_name,
+                    args=(chat_name,),
+                    type='primary',
+                    # use_container_width=True,
+                )
+            else:
+                chat_name_container.button(
+                    label='💬 ' + chat_name,
+                    on_click=switch_chat2,
+                    key=chat_name,
+                    args=(chat_name,),
+                    # use_container_width=True,
+                )
+
+    if new_chat_button:
+        switch_chat(new_chat_name)
+
+    # Download pdf
+    # if st.session_state.get('current_chat'):
+    #     chat = st.session_state["chats"][st.session_state['current_chat']]
+    #     pdf = FPDF('p', 'mm', 'A4')
+    #     pdf.add_page()
+    #     pdf.set_font(family='Times', size=16)
+    #     # pdf.cell(40, 50, txt='abcd.pdf')
+    #
+    #     if chat["answer"]:
+    #         for i in range(len(chat["answer"]) - 1, -1, -1):
+    #             # message(chat["answer"][i], key=str(i))
+    #             # message(chat['question'][i], is_user=True, key=str(i) + '_user')
+    #             pdf.cell(40, txt=f"""YOU: {chat["question"][i]}""")
+    #             pdf.cell(40, txt=f"""AI: {chat["answer"][i]}""")
+    #
+    #     export_pdf.download_button('📤 PDF', data=pdf.output(dest='S').encode('latin-1'), file_name='abcd.pdf')
+
+
+def init_chat(chat_name):
+    chat = st.session_state["chats"][chat_name]
+
+    # with MAIN.container():
+    answer_zoom = st.container()
+    ask_form = st.empty()
+
+    if len(chat['messages']) == 1 and st.session_state["params"]["prompt"]:
+        chat["messages"][0]['content'] = st.session_state["params"]["prompt"]
+
+    if chat['messages']:
+        # answer_zoom.markdown(f"""🤖 **Prompt:** {chat["messages"][0]['content']}""")
+        # answer_zoom.info(f"""Prompt: {chat["messages"][0]['content']}""", icon="ℹ️")
+        answer_zoom.caption(f"""ℹ️ Prompt: {chat["messages"][0]['content']}""")
+    if chat["question"]:
+        for i in range(len(chat["question"])):
+            answer_zoom.markdown(f"""😃 **YOU:** {chat["question"][i]}""")
+            if i < len(chat["answer"]):
+                answer_zoom.markdown(f"""🤖 **AI:** {chat["answer"][i]}""")
+
+    with ask_form.form(chat_name):
+        col1, col2 = st.columns([10, 1])
+        input_text = col1.text_area("😃 You: ", "Hello, how are you?", key="input", max_chars=2000,
+                                     label_visibility='collapsed')
+
+        submitted = col2.form_submit_button("🛫")
+
+        if submitted and input_text:
+            chat["messages"].append({"role": "user", "content": input_text})
+            answer_zoom.markdown(f"""😃 **YOU:** {input_text}""")
+
+            with st.spinner("Wait for responding..."):
+                answer = ask(chat["messages"])
+                answer_zoom.markdown(f"""🤖 **AI:** {answer}""")
+            chat["messages"].append({"role": "assistant", "content": answer})
+            if answer:
+                chat["question"].append(input_text)
+                chat["answer"].append(answer)
+
+
+
+
+def init_css():
+    """try to fixed input field"""
+    st.markdown(
+        """
+    <style>
+div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] > [data-testid="stForm"]  {
+    border: 20px groove red;
+    position: fixed;
+    width: 100%;
+    
+    flex-direction: column;
+    flex-grow: 5;
+    overflow: auto;
+}        
+    </style>
+    """,
+        unsafe_allow_html=True,
+    )
+
+
+def ask(messages):
+    if st.session_state["params"]["model"] == 'gpt-3.5-turbo':
+        response = openai.ChatCompletion.create(
+            model=st.session_state["params"]["model"],
+            temperature=st.session_state["params"]["temperature"],
+            messages=messages,
+            max_tokens=st.session_state["params"]["max_tokens"],
+        )
+        answer = response["choices"][0]["message"]["content"]
+    else:
+        raise NotImplementedError('Not implemented yet!')
+    return answer
+
+
+if __name__ == "__main__":
+    print("loading")
+    init_openai_settings()
+    # init_css()
+    init_session()
+    init_sidebar()
+    if st.session_state.get("current_chat"):
+        print("current_chat: ", st.session_state.get("current_chat"))
+        init_chat((st.session_state["current_chat"]))
+    if len(st.session_state["chats"]) == 0:
+        switch_chat(new_chat(f"Chat{len(st.session_state['chats'])}"))
