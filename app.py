@@ -116,15 +116,15 @@ if input_text:
     if prompt:
         openai.api_key = st.secrets["openaiKey"]
 	response = openai.ChatCompletion.create(
-	    model=MODEL,
-	    messages=[
+            model=MODEL,
+            messages=[
                 {"role": "system", "content": "You are an assistant that helps people clarify their arguments. A user puts in a statement and you answer with a critique."},
                 {"role": "user", "content": input_text},
                 # {"role": "assistant", "content": "O hark! The hue of yonder fruit, it be the shade of an orange!"},
                 # {"role": "user", "content": ""}
-	    ],
-	    temperature=0.8,
-	)
+            ],
+            temperature=0.8,
+        )
         response = openai.Completion.create(engine="text-davinci-002", prompt=prompt, max_tokens=150)
         critique_output = response['choices'][0]['text']
         today = datetime.today().strftime('%Y-%m-%d')
