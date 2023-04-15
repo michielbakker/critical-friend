@@ -169,7 +169,7 @@ def init_chat(chat_name):
 
     with ask_form.form(chat_name):
         col1, col2 = st.columns([10, 1])
-        input_text = col1.text_area("😃 You: ", "Hello, how are you?", key="input", max_chars=2000,
+        input_text = col1.text_area("😃 You: ", "Please write your opinion :)", key="input", max_chars=2000,
                                      label_visibility='collapsed')
 
         submitted = col2.form_submit_button("🛫")
