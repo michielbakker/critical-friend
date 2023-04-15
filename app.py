@@ -113,7 +113,7 @@ st.markdown(hide, unsafe_allow_html=True)
 #     unsafe_allow_html=True,
 # )
 if input_text:
-    if prompt:
+    if True:
         openai.api_key = st.secrets["openaiKey"]
         response = openai.ChatCompletion.create(
             model=MODEL,
