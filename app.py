@@ -11,6 +11,10 @@ st.set_page_config(page_title="ChatGPT", page_icon="🌐")
 MAIN = st.empty()
 
 
+PROMT = """
+I want you to constructively critique the arguments I'm about to put forward. Play the role of a "critical friend" having a discussion with me. Give responses in a way that would open up rather than close down the debate. Please limit your responses to 1-2 sentences.
+""".strip()
+
 def create_download_link(val, filename):
     b64 = base64.b64encode(val)  # val looks like b'...'
     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download="{filename}.pdf">Download file</a>'
