@@ -115,6 +115,7 @@ st.markdown(hide, unsafe_allow_html=True)
 if input_text:
     if True:
         openai.api_key = st.secrets["openaiKey"]
+	MODEL = "gpt-3.5-turbo"
         response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
