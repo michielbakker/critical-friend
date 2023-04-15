@@ -16,9 +16,9 @@ def create_download_link(val, filename):
     return f'<a href="data:application/octet-stream;base64,{b64.decode()}" download="{filename}.pdf">Download file</a>'
 
 
-@st.cache
-def init_openai_settings():
-    openai.api_key = st.secrets["openaiKey"]
+# @st.cache
+# def init_openai_settings():
+#     openai.api_key = st.secrets["openaiKey"]
 
 
 def init_session():
@@ -221,7 +221,7 @@ def ask(messages):
 
 if __name__ == "__main__":
     print("loading")
-    init_openai_settings()
+    openai.api_key = st.secrets["openaiKey"]
     # init_css()
     init_session()
     init_sidebar()
