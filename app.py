@@ -115,7 +115,7 @@ st.markdown(hide, unsafe_allow_html=True)
 if input_text:
     if prompt:
         openai.api_key = st.secrets["openaiKey"]
-	response = openai.ChatCompletion.create(
+        response = openai.ChatCompletion.create(
             model=MODEL,
             messages=[
                 {"role": "system", "content": "You are an assistant that helps people clarify their arguments. A user puts in a statement and you answer with a critique."},
