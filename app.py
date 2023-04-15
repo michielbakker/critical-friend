@@ -127,7 +127,7 @@ if input_text:
             temperature=0.8,
         )
         # response = openai.Completion.create(engine="text-davinci-002", prompt=prompt, max_tokens=150)
-        critique_output = response['choices'][0]['text']
+        critique_output = response.choices[0].message.content
         today = datetime.today().strftime('%Y-%m-%d')
         topic = "Critique for: "+input_text+"\n@Date: "+str(today)+"\n"+critique_output
         
